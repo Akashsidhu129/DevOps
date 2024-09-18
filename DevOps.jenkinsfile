@@ -1,0 +1,34 @@
+pipeline{
+    agent any
+    environment{
+        name = "Akashdeep"
+    }
+
+    stages{
+        stage('Build') {
+            steps {
+                echo "Build started and completed!"
+                sh "java --version"
+            }
+        }
+        stage('Test') {
+            steps {
+                echo "Test started and completed!"
+            }
+        }
+        stage('Deploy') {
+            steps {
+                retry(3){
+                    sh 'command fail'
+                }
+                echo "Deployment started and completed!"
+                echo "$NAME, deployment is done!"
+            }
+
+            timeout(time:3, unit:'seconds')
+            {
+                sleep 5
+            }
+        }
+    }
+}
