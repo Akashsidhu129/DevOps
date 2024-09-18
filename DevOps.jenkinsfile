@@ -1,34 +1,82 @@
-pipeline{
+pipeline {
     agent any
-    environment{
-        name = "Akashdeep"
-    }
 
-    stages{
+    stages {
         stage('Build') {
             steps {
-                echo "Build started and completed!"
-                sh "java --version"
+                script {
+                    echo 'Building the project...'
+                    // Replace with your specific build command
+                    sh './gradlew build' // Adjust based on your build tool (Maven, Gradle, etc.)
+                }
             }
         }
         stage('Test') {
             steps {
-                echo "Test started and completed!"
+                script {
+                    echo 'Running automated tests...'
+                    // Replace with your specific testing framework command
+                    sh './gradlew test' // Adjust based on your testing setup
+                }
             }
         }
-        stage('Deploy') {
+        stage('Code Quality Analysis') {
             steps {
-                retry(3){
-                    sh 'command fail'
+                script {
+                    echo 'Running code quality analysis...'
+                    // Assumes SonarQube is set up and configured
+                    sh 'sonar-scanner' // Adjust this command as per your code quality tool
                 }
-                echo "Deployment started and completed!"
-                echo "$NAME, deployment is done!"
             }
+        }
+        stage('Deploy to Test Environment') {
+            steps {
+                script {
+                    echo 'Deploying to the test environment...'
+                    // Assuming Docker for deployment; adjust based on your method
+                    sh 'docker-compose up -d' // Start the application in the background
+                }
+            }
+        }
+        stage('Release') {
+            steps {
+                script {
+                    echo 'Promoting to production...'
+                    // Example command for AWS Elastic Beanstalk
+                    sh 'eb deploy' // Adjust based on your release management tool
+                }
+            }
+        }
+        stage('Monitoring Setup') {
+            steps {
+                script {
+                    echo 'Setting up monitoring...'
+                    // Replace with your monitoring setup commands
+                    sh 'curl -X POST -H "Content-Type: application/json" -d "{\"application\": \"myApp\"}" http://your-monitoring-service/api/setup' // Example setup command
+                }
+            }
+        }
+        stage('Post-deployment Testing') {
+            steps {
+                script {
+                    echo 'Running post-deployment tests...'
+                    // Replace with your post-deployment test commands
+                    sh './run_post_deployment_tests.sh' // Custom script for additional tests
+                }
+            }
+        }
+    }
 
-            timeout(time:3, unit:'seconds')
-            {
-                sleep 5
-            }
+    post {
+        always {
+            echo 'Cleaning up workspace...'
+            cleanWs() // Cleans up the workspace after job completion
+        }
+        success {
+            echo 'Pipeline executed successfully!'
+        }
+        failure {
+            echo 'Pipeline failed!'
         }
     }
 }
