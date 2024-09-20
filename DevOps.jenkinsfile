@@ -5,13 +5,12 @@ pipeline {
         stage('Build') {
             steps {
                 echo "Building the Node.js application..."
-                // Navigate to the project directory
-                dir('node-authentication-jwt-mongodb-main') {
-                    // Install dependencies
-                    sh 'npm install'
-                    
-                    // Create a build artifact (ZIP file)
-                    sh 'zip -r ../node-authentication.zip .'
+                // Use the NodeJS tool configured in Jenkins
+                nodejs('NodeJS') { // Use the name you gave your NodeJS installation
+                    dir('node-authentication-jwt-mongodb-main') {
+                        sh 'npm install'
+                        sh 'zip -r ../node-authentication.zip .'
+                    }
                 }
             }
         }
