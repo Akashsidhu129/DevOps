@@ -1,60 +1,70 @@
 pipeline {
-    agent any 
+    agent any
+
+    environment {
+        SONARQUBE_URL = 'http://your-sonarqube-server'
+        SONARQUBE_TOKEN = 'your-sonarqube-token' // Use Jenkins credentials for security
+    }
 
     stages {
+        stage('Checkout') {
+            steps {
+                // Checkout the code from GitHub
+                git url: 'https://github.com/your-username/your-repo.git'
+            }
+        }
+
+        stage('Install Dependencies') {
+            steps {
+                // Install npm dependencies
+                sh 'npm install'
+            }
+        }
+
         stage('Build') {
             steps {
-                script {
-                    // Example for a Maven project
-                    sh 'mvn clean package'
-                    // Create a Docker image
-                    // sh 'docker build -t myapp:${GIT_COMMIT} .'
-                }
+                // Build your Node.js application (if applicable)
+                // Add build commands if needed, e.g., `npm run build`
+                echo 'Building application...'
             }
         }
 
         stage('Test') {
             steps {
-                script {
-                    // Run tests using JUnit or any other framework
-                    sh 'mvn test'
-                }
+                // Run tests using JUnit (ensure you have test scripts configured)
+                // Here, we'll assume your tests are run with npm
+                sh 'npm test'
             }
         }
 
         stage('Code Quality Analysis') {
             steps {
                 script {
-                    // Run SonarQube analysis (make sure to have SonarQube configured)
-                    sh 'mvn sonar:sonar -Dsonar.projectKey=myapp'
+                    // Run SonarQube analysis
+                    sh "sonar-scanner -Dsonar.projectKey=your-project-key -Dsonar.sources=. -Dsonar.host.url=${SONARQUBE_URL} -Dsonar.login=${SONARQUBE_TOKEN}"
                 }
             }
         }
 
         stage('Deploy') {
             steps {
-                script {
-                    // Example for deploying with Docker Compose
-                    sh 'docker-compose up -d'
-                }
+                // Deploy your application (adjust based on your deployment strategy)
+                echo 'Deploying application...'
+                // Example for Docker: sh 'docker build -t your-image .'
             }
         }
 
         stage('Release') {
             steps {
-                script {
-                    // Example for AWS CodeDeploy or other release management tool
-                    echo 'Releasing application...'
-                }
+                // Promote your application to production if needed
+                echo 'Releasing application...'
             }
         }
 
         stage('Monitoring and Alerting') {
             steps {
-                script {
-                    // Example for setting up monitoring with Datadog
-                    echo 'Setting up monitoring...'
-                }
+                // Set up monitoring (if applicable)
+                echo 'Setting up monitoring...'
             }
         }
     }
