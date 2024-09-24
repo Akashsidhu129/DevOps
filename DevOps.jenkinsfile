@@ -7,11 +7,7 @@ tools {nodejs "node"}
             steps {
                 echo "Building the Node.js application..."
                 git 'https://github.com/PraneshASP/node-authentication-jwt-mongodb.git'
-            
-                    
-                        bat 'npm install'
-                    
-                }
+                bat 'npm install'
             }
         }
     }
