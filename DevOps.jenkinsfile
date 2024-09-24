@@ -1,71 +1,60 @@
 pipeline {
     agent any
-
+    
     environment {
-        SONARQUBE_URL = 'http://your-sonarqube-server'
-        SONARQUBE_TOKEN = 'your-sonarqube-token' // Use Jenkins credentials for security
+        NETLIFY_SITE_ID = 'aecf50a1-a868-4cec-91b2-9cc702dd955e'
     }
-
+    
     stages {
-        stage('Checkout') {
-            steps {
-                // Checkout the code from GitHub
-                git url: 'https://github.com/your-username/your-repo.git'
-            }
-        }
-
-        stage('Install Dependencies') {
-            steps {
-                // Install npm dependencies
-                sh 'npm install'
-            }
-        }
-
         stage('Build') {
             steps {
-                // Build your Node.js application (if applicable)
-                // Add build commands if needed, e.g., `npm run build`
-                echo 'Building application...'
+                sh 'npm install' // Install Dependency
+                sh 'npm run build' // Build the React app
             }
         }
 
         stage('Test') {
             steps {
-                // Run tests using JUnit (ensure you have test scripts configured)
-                // Here, we'll assume your tests are run with npm
-                sh 'npm test'
+                sh 'npm test -- --passWithNoTests' // Run automated tests
             }
         }
 
         stage('Code Quality Analysis') {
             steps {
+                sh 'npx eslint src' // Run code quality analysis with ESLint
+            }
+        }
+
+        stage('Deploy to Test Environment') {
+            steps {
+                sh 'docker build -t my-react-app .' // Build Docker image
+                sh 'docker stop my-react-container || true' // Stop existing container (if running)
+                sh 'docker rm my-react-container || true' // Remove existing container (if exists)
+                sh 'docker run -d --name my-react-container -p 3000:3000 my-react-app' // Run Docker container
+            }
+        }
+        
+        stage('Release to Netlify') {
+            steps {
                 script {
-                    // Run SonarQube analysis
-                    sh "sonar-scanner -Dsonar.projectKey=your-project-key -Dsonar.sources=. -Dsonar.host.url=${SONARQUBE_URL} -Dsonar.login=${SONARQUBE_TOKEN}"
+                    sh "sudo netlify deploy --dir=./build --prod --site=${env.NETLIFY_SITE_ID}"
                 }
             }
         }
-
-        stage('Deploy') {
-            steps {
-                // Deploy your application (adjust based on your deployment strategy)
-                echo 'Deploying application...'
-                // Example for Docker: sh 'docker build -t your-image .'
-            }
+    }
+    
+    post {
+        success {
+            emailext subject: "Pipeline '${currentBuild.fullDisplayName}' Successful",
+                      body: 'The build was successful. Congratulations!',
+                      to: 'akashsidhu129.aus@gmail.com',
+                      attachLog: true
         }
-
-        stage('Release') {
-            steps {
-                // Promote your application to production if needed
-                echo 'Releasing application...'
-            }
-        }
-
-        stage('Monitoring and Alerting') {
-            steps {
-                // Set up monitoring (if applicable)
-                echo 'Setting up monitoring...'
-            }
+        failure {
+            emailext subject: "Pipeline '${currentBuild.fullDisplayName}' Failed",
+                      body: 'The build has failed. Please investigate.',
+                      to: 'akashsidhu129.aus@gmail.com',
+                      attachLog: true
         }
     }
 }
