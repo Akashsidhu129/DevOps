@@ -6,7 +6,7 @@ tools {nodejs "node"}
         stage('Build') {
             steps {
                 echo "Building the Node.js application..."
-                git 'https://github.com/Akashsidhu129/DevOps.git'
+                git 'https://github.com/PraneshASP/node-authentication-jwt-mongodb.git'
             
                     
                         bat 'npm install'
