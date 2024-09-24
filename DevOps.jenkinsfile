@@ -1,16 +1,16 @@
 pipeline {
     agent any
 
+tools {nodejs "node"}
     stages {
         stage('Build') {
             steps {
                 echo "Building the Node.js application..."
-                // Use the NodeJS tool configured in Jenkins
-                nodejs('NodeJS') { // Use the name you gave your NodeJS installation
-                    dir('node-authentication-jwt-mongodb-main') {
-                        sh 'npm install'
-                        sh 'zip -r ../node-authentication.zip .'
-                    }
+                git 'https://github.com/Akashsidhu129/DevOps.git'
+            
+                    
+                        bat 'npm install'
+                    
                 }
             }
         }
