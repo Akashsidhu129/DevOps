@@ -2,10 +2,10 @@ pipeline {
     agent any
 
     environment {
-        GIT_URL = 'https://github.com/Akashsidhu129/DevOps.git'
-        IMAGE_NAME = 'akashdeep/your-app-name'
-        DOCKER_USERNAME = credentials('docker-username') // Update with your Jenkins credentials ID
-        DOCKER_PASSWORD = credentials('docker-password') // Update with your Jenkins credentials ID
+        // Update this URL to your actual Git repository
+        GIT_URL = 'https://github.com/Akashsidhu129/DevOps.git' 
+        // Update this to your desired image name
+        IMAGE_NAME = 'akashdeep129/Devops' 
     }
 
     stages {
@@ -17,24 +17,34 @@ pipeline {
         }
         stage('Build Docker Image') {
             steps {
-                // Build the Docker image
-                sh "docker build -t ${IMAGE_NAME}:latest ."
-            }
-        }
-        stage('Push Docker Image') { // Optional stage to push the Docker image
-            steps {
                 script {
-                    // Log in to Docker Hub
-                    sh "echo $DOCKER_PASSWORD | docker login -u $DOCKER_USERNAME --password-stdin"
-                    // Push the Docker image
-                    sh "docker push ${IMAGE_NAME}:latest"
+                    try {
+                        // Build the Docker image
+                        sh "docker build -t ${IMAGE_NAME}:latest ."
+                    } catch (Exception e) {
+                        error "Docker build failed: ${e.message}"
+                    }
                 }
             }
         }
-        stage('Archive Artifacts') {
+        stage('Push Docker Image') {
             steps {
-                // Optionally, you can archive the Docker image
-                // Note: Archiving Docker images isn't typical; you usually push to a registry.
+                script {
+                    try {
+                        // Log in to Docker Hub
+                        sh "echo \$DOCKER_PASSWORD | docker login -u \$DOCKER_USERNAME --password-stdin"
+                        // Push the Docker image to Docker Hub
+                        sh "docker push ${IMAGE_NAME}:latest"
+                    } catch (Exception e) {
+                        error "Docker push failed: ${e.message}"
+                    }
+                }
+            }
+        }
+        stage('Archive Docker Build Logs') {
+            steps {
+                // Archive Docker build logs if available
+                archiveArtifacts artifacts: '**/build.log', allowEmptyArchive: true // Adjust if needed
             }
         }
     }
