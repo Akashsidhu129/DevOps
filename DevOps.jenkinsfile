@@ -2,58 +2,40 @@ pipeline {
     agent any
 
     environment {
-        DOCKER_IMAGE = 'your-docker-image-name'  // Replace with your Docker image name
-        DOCKER_REGISTRY = 'your-registry-url'    // Replace with your registry URL (e.g., Docker Hub)
+        GIT_URL = 'https://github.com/Akashsidhu129/DevOps.git'
+        IMAGE_NAME = 'akashdeep/your-app-name'
+        DOCKER_USERNAME = credentials('docker-username') // Update with your Jenkins credentials ID
+        DOCKER_PASSWORD = credentials('docker-password') // Update with your Jenkins credentials ID
     }
 
     stages {
-        stage('Build') {
+        stage('Checkout') {
             steps {
-                echo 'Building Docker image...'
-                
+                // Checkout code from Git
+                git "${GIT_URL}"
+            }
+        }
+        stage('Build Docker Image') {
+            steps {
                 // Build the Docker image
-                sh 'docker build -t ${DOCKER_IMAGE}:latest .'
-
-                // Optional: Tag the image for your registry
-                sh 'docker tag ${DOCKER_IMAGE}:latest ${DOCKER_REGISTRY}/${DOCKER_IMAGE}:latest'
-
-                // Optional: Push the Docker image to the registry (requires login)
-                withCredentials([usernamePassword(credentialsId: 'docker-credentials-id', 
-                usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
-                    sh 'echo $DOCKER_PASS | docker login ${DOCKER_REGISTRY} -u $DOCKER_USER --password-stdin'
-                    sh 'docker push ${DOCKER_REGISTRY}/${DOCKER_IMAGE}:latest'
+                sh "docker build -t ${IMAGE_NAME}:latest ."
+            }
+        }
+        stage('Push Docker Image') { // Optional stage to push the Docker image
+            steps {
+                script {
+                    // Log in to Docker Hub
+                    sh "echo $DOCKER_PASSWORD | docker login -u $DOCKER_USERNAME --password-stdin"
+                    // Push the Docker image
+                    sh "docker push ${IMAGE_NAME}:latest"
                 }
             }
         }
-
-        stage('Test') {
+        stage('Archive Artifacts') {
             steps {
-                echo 'Running tests...'
-                // Add test steps if needed
+                // Optionally, you can archive the Docker image
+                // Note: Archiving Docker images isn't typical; you usually push to a registry.
             }
-        }
-
-        stage('Deploy') {
-            steps {
-                echo 'Deploying application...'
-                // Add deployment steps (e.g., docker run)
-            }
-        }
-
-        stage('Release') {
-            steps {
-                echo 'Releasing application...'
-                // Final release steps if needed
-            }
-        }
-    }
-
-    post {
-        success {
-            echo 'Pipeline completed successfully!'
-        }
-        failure {
-            echo 'Pipeline failed!'
         }
     }
 }
