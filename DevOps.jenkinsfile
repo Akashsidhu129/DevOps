@@ -2,10 +2,9 @@ pipeline {
     agent any
 
     environment {
-        // Update this URL to your actual Git repository
-        GIT_URL = 'https://github.com/Akashsidhu129/DevOps.git' 
-        // Update this to your desired image name
-        IMAGE_NAME = 'akashdeep129/Devops' 
+        GIT_URL = 'https://github.com/Akashsidhu129/DevOps.git'
+        IMAGE_NAME = 'akashdeep/your-app-name' // Your Docker image name
+        SONARQUBE_SERVER = 'http://your-sonarqube-server' // Your SonarQube server URL
     }
 
     stages {
@@ -15,37 +14,71 @@ pipeline {
                 git "${GIT_URL}"
             }
         }
-        stage('Build Docker Image') {
+
+        stage('Build') {
             steps {
                 script {
-                    try {
-                        // Build the Docker image
-                        sh "docker build -t ${IMAGE_NAME}:latest ."
-                    } catch (Exception e) {
-                        error "Docker build failed: ${e.message}"
-                    }
+                    // Build the Docker image
+                    sh "docker build -t ${IMAGE_NAME}:latest ."
                 }
             }
         }
-        stage('Push Docker Image') {
+
+        stage('Test') {
             steps {
                 script {
-                    try {
-                        // Log in to Docker Hub
-                        sh "echo \$DOCKER_PASSWORD | docker login -u \$DOCKER_USERNAME --password-stdin"
-                        // Push the Docker image to Docker Hub
-                        sh "docker push ${IMAGE_NAME}:latest"
-                    } catch (Exception e) {
-                        error "Docker push failed: ${e.message}"
-                    }
+                    // Run automated tests, e.g., using JUnit or other testing frameworks
+                    // Assuming you have a test command defined, e.g., `./run-tests.sh`
+                    sh './run-tests.sh'
                 }
             }
         }
-        stage('Archive Docker Build Logs') {
+
+        stage('Code Quality Analysis') {
             steps {
-                // Archive Docker build logs if available
-                archiveArtifacts artifacts: '**/build.log', allowEmptyArchive: true // Adjust if needed
+                script {
+                    // Run SonarQube analysis
+                    sh "docker run --rm -e SONAR_HOST_URL=${SONARQUBE_SERVER} -e SONAR_TOKEN=${SONAR_TOKEN} sonarsource/sonar-scanner-cli"
+                }
             }
+        }
+
+        stage('Deploy') {
+            steps {
+                script {
+                    // Deploy the application, e.g., using Docker Compose
+                    sh "docker-compose up -d"
+                }
+            }
+        }
+
+        stage('Release') {
+            steps {
+                script {
+                    // Promote the application to production
+                    // Replace this with your specific release command
+                    sh "echo 'Release step - customize as needed'"
+                }
+            }
+        }
+
+        stage('Monitoring and Alerting') {
+            steps {
+                script {
+                    // Configure monitoring using Datadog, New Relic, or similar
+                    // This can involve setting up an agent or using API calls
+                    sh "echo 'Monitoring step - customize as needed'"
+                }
+            }
+        }
+    }
+
+    post {
+        success {
+            echo 'Pipeline completed successfully!'
+        }
+        failure {
+            echo 'Pipeline failed. Please check the logs for details.'
         }
     }
 }
